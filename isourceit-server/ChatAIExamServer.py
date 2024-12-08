@@ -64,7 +64,7 @@ def create_server_apps(config_file_path: str, static_folder_path: str,
             "origins": ["http://localhost:3000", "http://127.0.0.1:3000", "moz-extension://*"],
             "supports_credentials": True
         }})
-        socket_io_allowed_origin = ("http://localhost:3000", "http://127.0.0.1:3000")
+        socket_io_allowed_origin = ("http://localhost:8888", "http://127.0.0.1:8888")
 
     # Flask-SocketIO initialisation
     socketio = SocketIO(app, message_queue=app.config.get('REDIS_URL', 'redis://'),
@@ -119,6 +119,7 @@ def create_server_apps(config_file_path: str, static_folder_path: str,
     # Websocket controllers setup
     @socketio.on('connect')
     def test_connect(auth):
+        LOG.info("connection --- socket")
         try:
             if not has_logged_session() or not session_is_student():
                 raise ConnectionRefusedError("Authentication with proper role required")
@@ -131,6 +132,7 @@ def create_server_apps(config_file_path: str, static_folder_path: str,
 
     @socketio.on('disconnect')
     def test_disconnect():
+        LOG.info("disconnection --- socket")
         pass
 
     return app, socketio, chat_ai_mgr

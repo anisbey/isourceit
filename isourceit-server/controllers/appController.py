@@ -14,6 +14,7 @@ app_controller = Blueprint('app', __name__)
 def get_chat_available():
     # load chat manager and return available chats
     chat_ai_mgr = ChatAIManager()
+    print(chat_ai_mgr)
     return chat_ai_mgr.available_chats
 
 

@@ -5,9 +5,9 @@ from datetime import timedelta
 # use 0.0.0.0:5000 for a docker deployment
 SERVER_HOST = '0.0.0.0'
 SERVER_PORT = 5000
-DEBUG = False
+DEBUG = True
 # CORS Configuration
-ENABLE_CORS = False  # Enable CORS compliancy only if the front app is served by another server (mostly in dev. conf)
+ENABLE_CORS = True  # Enable CORS compliancy only if the front app is served by another server (mostly in dev. conf)
 # Session configuration
 SECRET_KEY = "3fc5c5170ebf71780ba3847bdcec28dd0e1b989ab415ea9d2fa9cc451b6cf4eb"
 SESSION_COOKIE_NAME = "JSESSID"  # default JSESSIOND
@@ -87,10 +87,15 @@ DEFAULT_SOCRAT_CHAT_TEMPERATURE = 0.2
 # Dalai Integration
 # if CHATAI_DALAI_URL not set, this integration is disabled
 # Access to the dalai webservice
-# CHATAI_DALAI_URL = 'http://dalai-server:3000'
+#CHATAI_DALAI_URL = 'http://dalai-server:3000'
+
+# Ollama Integration
+# if CHATAI_Ollama_URL not set, this integration is disabled
+# Access to the ollama webservice
+CHATAI_OLLAMA_URL = 'http://127.0.0.1:11434'
 
 # OpenAI Integration
 # if CHATAI_OPENAI_ENABLED is set to True, OpenAI will be available
-# CHATAI_OPENAI_ENABLED = True
+CHATAI_OPENAI_ENABLED = True
 # CHATAI_OPENAI_POOL_SIZE define the number of threads to handle OpenAI chat requests (default 4)
 # CHATAI_OPENAI_POOL_SIZE = 4

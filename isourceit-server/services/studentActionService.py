@@ -130,6 +130,7 @@ def __handle_exam_action(action_data: Dict, action_class: Any, exam: Exam, mongo
             'prompt': action['prompt'],
         }
         if ws_sid is not None:
+            LOG.warning("ws_ssiiiiss is not None")
             chat_ai_mgr.process_prompt(action_id, action, ws_sid, private_key=private_key)
         else:
             LOG.warning('No ws id, will not be able to return reponse!')

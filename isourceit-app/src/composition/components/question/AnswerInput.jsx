@@ -12,16 +12,13 @@ function AnswerInput({
           <Form.Label>{label}</Form.Label>
         )
       }
-      <Form.Control
-        as="textarea"
-        cols={100}
-        rows={5}
-        autoComplete="off"
-        spellCheck={false}
-        required={required}
-        value={answer ?? ''}
-        onChange={(e) => onAnswerChange(e.target.value)}
-      />
+      
+      <RichTextEditor
+                      value={answer ?? ''}
+                      onChange={(value) => dispatch({ type: 'set-raw-field', field: 'description', value })}
+                      placeholder="Your answer"
+                      required
+                    />
     </Form.Group>
   );
 }
