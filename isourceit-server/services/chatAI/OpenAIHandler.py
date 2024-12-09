@@ -18,7 +18,7 @@ __all__ = ['OpenAIHAndler']
 LOG = logging.getLogger(__name__)
 
 NAME_MODEL_DICT = {
-    'gpt-3.5-turbo': 'Most capable GPT-3.5 model.'
+    'gpt-4o': 'Most capable GPT model.'
 }
 
 OPENAI_CHAT_URL = "https://api.openai.com/v1/chat/completions"
