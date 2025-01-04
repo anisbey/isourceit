@@ -164,6 +164,11 @@ function _AskChatAIAction({ action, ...props }) {
         {' '}
         {action.answer}
       </p>
+      <p className="mb-2" style={{ whiteSpace: 'pre-line' }}>
+        <u>Comment:</u>
+        {' '}
+        {action.comment}
+      </p>
     </BaseAction>
   );
 }

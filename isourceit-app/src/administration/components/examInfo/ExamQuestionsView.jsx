@@ -44,13 +44,14 @@ function ExamQuestionsView({ examType, exam }) {
     default:
       throw new Error(`Unmanageable examType: ${examType}`);
   }
+
   return (
     <ListGroup>
       {
         exam.questions?.map((question, idx) => (
           // eslint-disable-next-line react/no-array-index-key
           <ListGroup.Item key={idx}>
-            <QuestionComponent question={question} />
+            <QuestionComponent question={question.text} />
           </ListGroup.Item>
         ))
         }

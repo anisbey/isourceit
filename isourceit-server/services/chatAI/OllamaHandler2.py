@@ -18,22 +18,33 @@ __all__ = ['OllamaHAndler2']
 LOG = logging.getLogger(__name__)
 
 NAME_MODEL_DICT = {
-    'mistral': 'Most capable model.',
-    "lllll" : 'Most capable model....',
+    'mistral': 'Most capable model.'
 }
 
-OLLAMA_CHAT_URL = "http://ollama:11434/api/chat"
+VISION_MODELS = ["llama3.2-vision","llama3.2-vision:90b"]
+
+
 DEFAULT_WORKER_POOL_SIZE = 4
 OLLAMA_SYSTEM_INIT_PROMPT = "You are a helpful assistant."
 OLLAMA_TEMPERATURE = 0.6
 
 def generate_request_messages_from_previous_chat_interactions(chat_interactions: List):
+    
     for interaction in chat_interactions:
         if interaction['achieved']:
             yield {'role': 'user',
+                   'content': interaction['hidden_prompt'] if interaction.get('hidden_prompt') else interaction['prompt']}
+            yield {'role': 'assistant', 'content': interaction.get('answer', '')}
+        elif 'image' in interaction :
+            if interaction['image']:
+                yield {'role': 'user',
+                        'content': interaction['hidden_prompt'] if interaction.get('hidden_prompt') else interaction[
+                            'prompt'],
+                        'images': [interaction['image']]}
+            else:
+                yield {'role': 'user',
                    'content': interaction['hidden_prompt'] if interaction.get('hidden_prompt') else interaction[
                        'prompt']}
-            yield {'role': 'assistant', 'content': interaction.get('answer', '')}
         else:
             yield {'role': 'user',
                    'content': interaction['hidden_prompt'] if interaction.get('hidden_prompt') else interaction[
@@ -48,7 +59,7 @@ class OllamaHandler2(ChatAIHandler):
         self._worker_pool_size: int = -1
         self._response_queue: Queue = response_queue
         self._init_config(config)
-        self._models = set()
+        self._url : str
 
     def _init_config(self, config: Dict = None):
         if config is not None:
@@ -92,40 +103,54 @@ class OllamaHandler2(ChatAIHandler):
         self._worker_pool.shutdown(wait=True, cancel_futures=True)
         self._worker_pool = None
 
-    def request_available_models(self, request_identifiers: Dict = None, **kwargs):
-        import requests
+    #check the availability of ollama on localhost and otherwise use the server of ollama
+    def check_ollama(self):
         # Define the API endpoint
-        url = "http://host.docker.internal:11434/api/tags"
-
-
-        if not self.connected:
-            LOG.warning('Cannot request available model. Not Connected.')
-            return
-        LOG.info("models OLLAMA ---- get")
+        url = "http://localhost:11434/api/tags"
         try:
             # Send the GET request
             response = requests.get(url)
             response.raise_for_status()  # Raise an error for HTTP codes 4xx/5xx
             # Parse the JSON response
             models = response.json()
-            # Display the list of models
-            #model_set = {model['answer'] for model in models}
-            #return model_set
-            LOG.info("models OLLAMA")
-            LOG.info(models)
+            if len(models["models"])>0:
+                LOG.warning('check ollama in localhost')
+                self._url = "http://localhost:11434"
+            else:
+                LOG.warning('There is no models in Ollama localhost - switch to Ollama server')
+                self._url = "http://host.docker.internal:11434"
+        except requests.exceptions.RequestException as e:
+            LOG.warning('check ollama in server 2')
+            self._url = "http://host.docker.internal:11434"
+            LOG.info(f"Error fetching models: {e}")
+
+    def request_available_models(self, request_identifiers: Dict = None, **kwargs):
+        # Define the API endpoint
+        url = self._url+"/api/tags"
+
+        if not self.connected:
+            LOG.warning('Cannot request available model. Not Connected.')
+            return
+        try:
+            # Send the GET request
+            response = requests.get(url)
+            response.raise_for_status()  # Raise an error for HTTP codes 4xx/5xx
+            # Parse the JSON response
+            models = response.json()
             for model in models["models"]:
                 result = dict() if request_identifiers is None else dict(request_identifiers)
                 result['answer'] = model["name"]
                 result['ended'] = True
                 result['chat_key'] = self.chat_key
                 self._response_queue.put(result)
-                #print(f"- {model['name']} (Size: {model['size']} bytes, Modified: {model['modified_at']})")
         except requests.exceptions.RequestException as e:
             LOG.info(f"Error fetching models: {e}")
 
     def _handle_prompt(self, action: AskChatAI, private_key: str, request_identifiers: Dict = None,
                        extra: dict = None):
         LOG.warning("_handle_prompt")
+        LOG.info(action)
+       
         # retrieve previous exchanges (requires examId, username, questionIdx, chat_key)
         mongo_dao = MongoDAO()
         old_chat_interactions = find_last_chat_ai_model_interactions(mongo_dao, username=action['student_username'],
@@ -133,17 +158,15 @@ class OllamaHandler2(ChatAIHandler):
                                                                      question_idx=action['question_idx'],
                                                                      chat_id=action['chat_id'])
         # forge request using stream mode and user tracking
-        LOG.warning("old chat interac")
         LOG.warning(old_chat_interactions)
 
         init_prompt = extra['custom_init_prompt'] if 'custom_init_prompt' in extra else OLLAMA_SYSTEM_INIT_PROMPT
 
         temperature = extra['custom_temperature'] if 'custom_temperature' in extra is not None else OLLAMA_TEMPERATURE
-
         rq_messages = [{"role": "system", "content": init_prompt}] + list(
-            generate_request_messages_from_previous_chat_interactions(old_chat_interactions))
-        LOG.warning("rq_messages")
-        LOG.warning(rq_messages)
+                generate_request_messages_from_previous_chat_interactions(old_chat_interactions))
+
+        
         rq_body = {
             'model': action['model_key'],
             'messages': rq_messages,
@@ -151,18 +174,14 @@ class OllamaHandler2(ChatAIHandler):
             'stream': True,
             'user': action['student_username']
         }
-        LOG.warning("_handle_prompt ---- --2")
         rq_headers = {
                       "Content-Type": "application/json"}
 
         # send request as stream and retrieve event sequentially
-        url1 = "http://host.docker.internal:11434/api/chat"
-
+        url1 = self._url+"/api/chat"
 
         try:
-            LOG.warning("_handle_prompt ---- --3")
             http_response = requests.post(url1, data=json.dumps(rq_body), headers=rq_headers, stream=True)
-            LOG.warning("_handle_prompt ---- --4")
             http_response.raise_for_status()
         except requests.exceptions.Timeout as e:
             LOG.warning('timeout exception: {}'.format(repr(e)))
@@ -173,7 +192,6 @@ class OllamaHandler2(ChatAIHandler):
         except requests.exceptions.RequestException as e:
             LOG.warning('Other request error: {}'.format(repr(e)))
         else:
-            LOG.warning("_handle_prompt ---- --5")
             try:
                 for line in http_response.iter_lines(decode_unicode=True):
                     if line:  # Skip empty lines
@@ -202,7 +220,6 @@ class OllamaHandler2(ChatAIHandler):
                                 result['chat_key'] = self.chat_key
                                 result['model_key'] = action['model_key']
                                 self._response_queue.put(result)
-                                LOG.warning("queueeee")
 
                         except json.JSONDecodeError as e:
                             LOG.error(f"JSON decode error: {e}")

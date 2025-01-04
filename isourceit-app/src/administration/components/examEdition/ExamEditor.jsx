@@ -55,7 +55,9 @@ function reduce(state, action) {
         loading: false,
         name: exam.name,
         description: exam.description,
-        questions: exam.questions?.length ? [...exam.questions] : [],
+        questions: exam.questions?.length
+          ? exam.questions.map((q) => ({ text: q, extraNotes: '' }))
+          : [],
         durationMinutes: exam.durationMinutes,
         rawAuthors: exam.authors.map((a) => a.username).join('\n'),
         rawStudents: exam.students.map((s) => s.username).join('\n'),
@@ -69,14 +71,23 @@ function reduce(state, action) {
     case 'add-question':
       return {
         ...state,
-        questions: [...state.questions, ''],
+        questions: [...state.questions, { text: '', extraNotes: '' }],
       };
     case 'set-question':
       return {
         ...state,
         questions: [
           ...state.questions.slice(0, action.questionIdx),
-          action.value,
+          { ...state.questions[action.questionIdx], text: action.value },
+          ...state.questions.slice(action.questionIdx + 1),
+        ],
+      };
+    case 'set-extra-notes':
+      return {
+        ...state,
+        questions: [
+          ...state.questions.slice(0, action.questionIdx),
+          { ...state.questions[action.questionIdx], extraNotes: action.value },
           ...state.questions.slice(action.questionIdx + 1),
         ],
       };
@@ -118,11 +129,15 @@ function reduce(state, action) {
   }
 }
 
+
 function computeExamJsonFromState(state, examId) {
   const jsonRep = {
     name: state.name.trim(),
     description: state.description.trim(),
-    questions: state.questions.map((q) => q.trim()).filter((q) => !!q),
+    questions: state.questions.map((q) => ({
+      text: q.text.trim(),
+      prompt_intruction: q.extraNotes.trim(),
+    })),
     duration_minutes: state.durationMinutes,
     authors: state.rawAuthors.split('\n')
       .map((a) => a.trim()).filter((a) => !!a)
@@ -142,6 +157,7 @@ function computeExamJsonFromState(state, examId) {
   }
   return jsonRep;
 }
+
 
 function ExamEditor({ newExam }) {
   const navigate = useNavigate();
@@ -239,31 +255,42 @@ function ExamEditor({ newExam }) {
                   </Form.Group>
                 </Col>
                 <Col xs={12} md={6}>
-                  <h3 className="text-primary">Questions</h3>
+                  <h3 className="text-primary">Question</h3>
                   {
                     state.questions?.map((question, idx) => (
                       // eslint-disable-next-line react/no-array-index-key
                       <Form.Group className="mb-1" controlId={`exam-edit-question-${idx}`} key={idx}>
-                        <Form.Label>
-                          <b>{`Question ${idx + 1}`}</b>
-                          <Button
-                            type="button"
-                            variant="danger"
-                            size="sm"
-                            onClick={() => dispatch({ type: 'delete-question', questionIdx: idx })}
-                            className="ms-3"
-                          >
-                            <FontAwesomeIcon icon={faTrash} aria-hidden="true" title="delete question" />
-                          </Button>
-                        </Form.Label>
-                        <RichTextEditor
-                          value={state.questions[idx]}
-                          onChange={(value) => dispatch({ type: 'set-question', questionIdx: idx, value })}
-                          placeholder="Your Question"
-                          required
-                          validated={state.validatedForm}
-                        />
-                      </Form.Group>
+                      <Form.Label>
+                        <b>{`Question ${idx + 1}`}</b>
+                        <Button
+                          type="button"
+                          variant="danger"
+                          size="sm"
+                          onClick={() => dispatch({ type: 'delete-question', questionIdx: idx })}
+                          className="ms-3"
+                        >
+                          <FontAwesomeIcon icon={faTrash} aria-hidden="true" title="delete question" />
+                        </Button>
+                      </Form.Label>
+                      <RichTextEditor
+                        value={state.questions[idx].text}
+                        onChange={(value) => dispatch({ type: 'set-question', questionIdx: idx, value })}
+                        placeholder="Your Question"
+                        required
+                        validated={state.validatedForm}
+                      />
+                      <Form.Control
+                        as="textarea"
+                        rows={3}
+                        placeholder="Additional notes for this question"
+                        value={state.questions[idx].extraNotes}
+                        onChange={(e) =>
+                          dispatch({ type: 'set-extra-notes', questionIdx: idx, value: e.target.value })
+                        }
+                        className="mt-2"
+                      />
+                    </Form.Group>
+                    
                     ))
                   }
                   <div className="d-grid gap-2">

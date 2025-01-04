@@ -8,6 +8,6 @@ __all__ = ['Exam']
 
 
 class Exam(BaseExam):
-    questions: List[pydantic.StrictStr]
+    questions: List[Dict[pydantic.StrictStr, pydantic.StrictStr]]
     duration_minutes: pydantic.StrictInt
     selected_chats: NotRequired[Dict[pydantic.StrictStr, Any]]  # { chat_key, private_key }

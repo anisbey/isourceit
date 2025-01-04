@@ -50,7 +50,15 @@ def create_action_detail_fields(action: StudentAction) -> Tuple[str, str, str]:
     elif a_type == 'WriteInitialAnswer':
         return 'Wrote Initial Answer', question, '-'
     elif a_type == 'AskChatAI':
-        return 'Asked Chat AI', question, 'Chat id: {}'.format(action['chat_id'])
+        if 'comment' in action:
+            comment = action['comment']
+        else:
+            comment = None
+        return 'Asked Chat AI', question, (
+        'Chat id: {}'.format(action['chat_id']),
+        'Answer: {}'.format(action['answer']),
+        'Comment: {}'.format(comment)
+    )
     elif a_type == 'AddExternalResource':
         return 'Added External Resource', question, 'type: {}, title: {}, description: {}, removed: {}'\
             .format(action['rsc_type'], action['title'], action['description'], format_bool(bool(action['removed'])))
@@ -299,6 +307,7 @@ def generate_socrat_report(exam: SocratQuestionnaire, student_username: str, act
 
 
 def generate_report(exam_type: str, exam: Union[Exam, SocratQuestionnaire], student_username: str, actions: List[StudentAction]) -> str:
+
     if exam_type == 'exam':
         yield from generate_exam_report(exam, student_username, actions)
     elif exam_type == 'socrat':

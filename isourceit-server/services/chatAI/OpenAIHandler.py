@@ -21,6 +21,8 @@ NAME_MODEL_DICT = {
     'gpt-4o': 'Most capable GPT model.'
 }
 
+VISION_MODELS = ["gpt-4o"]
+
 OPENAI_CHAT_URL = "https://api.openai.com/v1/chat/completions"
 DEFAULT_WORKER_POOL_SIZE = 4
 OPENAI_SYSTEM_INIT_PROMPT = "You are a helpful assistant."
@@ -34,6 +36,24 @@ def generate_request_messages_from_previous_chat_interactions(chat_interactions:
                    'content': interaction['hidden_prompt'] if interaction.get('hidden_prompt') else interaction[
                        'prompt']}
             yield {'role': 'assistant', 'content': interaction.get('answer', '')}
+        elif 'image' in interaction:
+            if interaction['image']:
+                yield {'role': 'user',
+                    'content': [
+
+                        {
+                        "type": "text",
+                        "text": interaction['hidden_prompt'] if interaction.get('hidden_prompt') else interaction[
+                        'prompt'],
+                    },
+                    {
+                        "type": "image_url",
+                        "image_url": {"url": f"data:image/jpeg;base64,{interaction['image']}"},
+                    }]}
+            else:
+                yield {'role': 'user',
+                   'content': interaction['hidden_prompt'] if interaction.get('hidden_prompt') else interaction[
+                       'prompt']}
         else:
             yield {'role': 'user',
                    'content': interaction['hidden_prompt'] if interaction.get('hidden_prompt') else interaction[
@@ -114,8 +134,9 @@ class OpenAIHAndler(ChatAIHandler):
         # forge request using stream mode and user tracking
         init_prompt = extra['custom_init_prompt'] if 'custom_init_prompt' in extra else OPENAI_SYSTEM_INIT_PROMPT
         temperature = extra['custom_temperature'] if 'custom_temperature' in extra is not None else OPENAI_TEMPERATURE
+        
         rq_messages = [{"role": "system", "content": init_prompt}] + list(
-            generate_request_messages_from_previous_chat_interactions(old_chat_interactions))
+                generate_request_messages_from_previous_chat_interactions(old_chat_interactions))
         rq_body = {
             'model': action['model_key'],
             'messages': rq_messages,

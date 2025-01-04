@@ -49,6 +49,7 @@ class ExamReportCreationThread(Thread):
                         # Retrieve student's action for the exam
                         actions = get_actions_for_student_for_exam(self.__mongo_dao, student_username,
                                                                    str(self.__exam['_id']))
+
                         # Create the html report, transform it into pdb and write it into the archive
                         html = ''.join(generate_report(self.__exam_type, self.__exam, student_username, actions))
                         with io.BytesIO() as pdf_file:

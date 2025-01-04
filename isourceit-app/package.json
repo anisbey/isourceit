@@ -29,12 +29,16 @@
   "homepage": "https://github.com/theDartagnan/isourceit#readme",
   "dependencies": {
     "@babel/runtime": "^7.20.7",
-    "@ckeditor/ckeditor5-react": "^6.0.0",
+    "@ckeditor/ckeditor5-build-classic": "^44.1.0",
+    "@ckeditor/ckeditor5-ckbox": "^44.1.0",
+    "@ckeditor/ckeditor5-react": "^6.3.0",
+    "@ckeditor/ckeditor5-upload": "^44.1.0",
     "@fortawesome/fontawesome-svg-core": "^6.2.1",
     "@fortawesome/free-solid-svg-icons": "^6.2.1",
     "@fortawesome/react-fontawesome": "^0.2.0",
     "axios": "^1.2.2",
     "bootstrap": "^5.2.3",
+    "ckbox": "^2.6.1",
     "classnames": "^2.3.2",
     "mobx": "^6.7.0",
     "mobx-react": "^7.6.0",
@@ -84,7 +88,7 @@
     "sass-loader": "^13.2.0",
     "style-loader": "^3.3.1",
     "webpack": "^5.75.0",
-    "webpack-bundle-analyzer": "^4.7.0",
+    "webpack-bundle-analyzer": "^4.10.2",
     "webpack-cli": "^5.0.1",
     "webpack-dev-server": "^4.11.1"
   }

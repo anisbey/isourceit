@@ -40,8 +40,8 @@ services:
       # - ./isourceit-server:/usr/src/app:ro # Uncomment if you want to modify the server source-code online (and comment the next line)
       - ./isourceit-server/config.py:/usr/src/app/config.py:ro # allow to change configuration without rebuilding the image
       - ./isourceit-app/build:/usr/src/front:ro
-    ports:
-      - 127.0.0.1:5000:5000
+    #ports:
+    #  - 127.0.0.1:5000:5000
     networks:
       isourceit-net:
           aliases:
@@ -68,6 +68,7 @@ services:
       - ./isourceit-app:/usr/src/app
     working_dir: /usr/src/app
     command: bash -c "npm ci && npm run build"
+
 
   
 

@@ -2,11 +2,12 @@ from flask import request, Blueprint
 from services import examService, securityService
 from sessions.securedEndpoint import secured_endpoint
 from sessions.sessionManagement import TEACHER_ROLE, ADMIN_ROLE, STUDENT_ROLE
+import logging
 
 __all__ = ['exam_controller']
 
 exam_controller = Blueprint('exam', __name__)
-
+LOG = logging.getLogger(__name__)
 
 @exam_controller.route("/api/rest/admin/exams", methods=['GET'])
 @secured_endpoint(TEACHER_ROLE, ADMIN_ROLE)
@@ -26,6 +27,8 @@ def get_exam(exam_id: str):
 @secured_endpoint(TEACHER_ROLE, ADMIN_ROLE)
 def create_exam():
     data = request.get_json(force=False)
+    LOG.info("  ccccreate exam")
+    LOG.info(data)
     return examService.create_exam(data)
 
 

@@ -6,7 +6,7 @@ import {
   Button, Col, Form, InputGroup, Row,
 } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPaperPlane } from '@fortawesome/free-solid-svg-icons';
+import { faPaperPlane, faPaperclip } from '@fortawesome/free-solid-svg-icons';
 import ChatAIMessageBox from './ChatAIMessageBox';
 
 import styleApp from './ChatAIChat.scss';
@@ -15,12 +15,34 @@ function ChatAIChat({
   chatActions, onSubmit, submitting, chatId, className, style,
 }) {
   const [prompt, setPrompt] = useState('');
+  const [imageBase64, setImageBase64] = useState('');
+  const [imageName, setImageName] = useState('');
 
   const submitPrompt = () => {
     const correctedPrompt = prompt?.trim();
-    if (correctedPrompt) {
-      onSubmit({ prompt: correctedPrompt });
-      setPrompt('');
+    const payload = {
+      prompt: correctedPrompt || null,
+      image: imageBase64 || null,
+    };
+
+    // Ensure at least one of the fields is populated
+    if (payload.prompt || payload.image) {
+      onSubmit(payload);
+      setPrompt(''); // Clear prompt
+      setImageBase64(''); // Clear image
+      setImageName(''); // Clear image name
+    }
+  };
+
+  const handleImageAttach = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      setImageName(file.name); // Store the image name
+      const reader = new FileReader();
+      reader.onload = () => {
+        setImageBase64(reader.result); // Store the image as a base64 string
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -35,7 +57,7 @@ function ChatAIChat({
             <Form.Control
               placeholder="Your prompt"
               aria-label="Chat prompt"
-              aria-describedby="champt-prompt"
+              aria-describedby="champ-prompt"
               as="textarea"
               rows={3}
               autoComplete="off"
@@ -45,16 +67,35 @@ function ChatAIChat({
               className="px-1"
               disabled={submitting || pendingAction}
             />
-            <Button
-              variant="outline-secondary"
-              id={`chat-prompt-send-button-${chatId}`}
-              type="button"
-              onClick={submitPrompt}
-              disabled={submitting || pendingAction}
-            >
-              <FontAwesomeIcon icon={faPaperPlane} size="sm" />
-            </Button>
           </InputGroup>
+          <Row className="align-items-center mt-2">
+            <Col>
+              <Form.Group>
+                <Form.Label htmlFor={`file-input-${chatId}`} style={{ cursor: 'pointer', marginRight: '10px' }}>
+                  <FontAwesomeIcon icon={faPaperclip} size="sm" /> Attach Image
+                </Form.Label>
+                <Form.Control
+                  type="file"
+                  id={`file-input-${chatId}`}
+                  style={{ display: 'none' }}
+                  onChange={handleImageAttach}
+                  accept="image/*" // Allow only image files
+                />
+                {imageName && <small className="text-muted ml-2">{imageName}</small>}
+              </Form.Group>
+            </Col>
+            <Col xs="auto">
+              <Button
+                variant="outline-secondary"
+                id={`chat-prompt-send-button-${chatId}`}
+                type="button"
+                onClick={submitPrompt}
+                disabled={submitting || pendingAction}
+              >
+                <FontAwesomeIcon icon={faPaperPlane} size="sm" /> Send
+              </Button>
+            </Col>
+          </Row>
         </Col>
       </Row>
     </div>
