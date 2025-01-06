@@ -56,7 +56,7 @@ services:
     volumes:
       - ./examples/reverseProxy/proxy-httpd.conf:/usr/local/apache2/conf/httpd.conf:ro
     ports:
-      - 127.0.0.1:8888:80
+      - 8888:80
     networks:
       - isourceit-net
 
