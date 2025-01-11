@@ -167,8 +167,9 @@ With :
 - __username__ the username
 
 # Contirbutors
-- Rémi Venant, LeMans University
 - Ahmad Samer Wazan, Zayed University
+- Anis Bey
+- Rémi Venant, LeMans University
 - Imran Taj, Zayed University
 
 
