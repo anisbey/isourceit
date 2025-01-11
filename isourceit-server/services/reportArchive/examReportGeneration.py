@@ -3,9 +3,10 @@ from typing import Iterable, Tuple, TypedDict, NotRequired, Dict, List, Union
 from mongoModel.Exam import Exam
 from mongoModel.SocratQuestionnaire import SocratQuestionnaire
 from mongoModel.StudentAction import StudentAction
+import logging
 
 __all__ = ['generate_report']
-
+LOG = logging.getLogger(__name__)
 
 class ActionSummary(TypedDict):
     nb_initial_ans: int
@@ -197,7 +198,7 @@ def generate_exam_answers(question_answers: Iterable[Tuple[str, str, str]]):
 <h4>Initial Answer</h4>
 <pre>
 {}
-</pre>""".format(idx + 1, question, final_ans, initial_ans)
+</pre>""".format(idx + 1, question["text"], final_ans, initial_ans)
 
 
 def generate_socrat_answers(question_answers: Iterable[Tuple[str, str, str, str]]):

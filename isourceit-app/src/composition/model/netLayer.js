@@ -36,6 +36,15 @@ export function commentOnAnswer({
     .then((res) => res.data);
 }
 
+export function saveOllamaIP({
+  OllamaIP
+}) {
+  return ROOT_AX.post(`${ROOT_URL}/admin/saveOllamaIP`, {
+    OllamaIP: OllamaIP
+  })
+    .then((res) => res.data);
+}
+
 
 export function lostFocus({
   questionId, timestamp, returnTimestamp, durationSeconds, pageHidden,

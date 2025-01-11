@@ -14,6 +14,7 @@ import ExamQuestionsView from './examInfo/ExamQuestionsView';
 import ExamStudentsView from './examInfo/ExamStudentsView';
 import ReportArchiveModal from './examInfo/ReportArchiveModal';
 import ExamStudentsAccessView from './examInfo/ExamStudentsAccessView';
+import { saveOllamaIP } from '../../composition/model/netLayer';
 
 function ExamView({ examType }) {
   const navigate = useNavigate();
@@ -41,9 +42,27 @@ function ExamView({ examType }) {
 
   const handleIPModalOpen = () => setShowIPModal(true);
   const handleIPModalClose = () => setShowIPModal(false);
-  const handleIPValidate = () => {
+
+  const handleIPValidate = async() => {
     console.log(`Ollama IP Updated: ${ollamaIP}`);
-    setShowIPModal(false);
+    if (!ollamaIP.trim()) {
+      alert('Message cannot be empty!');
+      return;
+    }
+    try {
+      // Call the commentOnAnswer function
+      const data = await saveOllamaIP({
+        OllamaIP: ollamaIP,
+      });
+  
+      setShowIPModal(false); // Close the modal
+    } catch (error) {
+      console.error('Error sending comment:', error);
+      alert('Failed to send update Ollama IP. Please try again.');
+    } finally {
+      setShowIPModal(false);
+    }
+    
   };
 
   const exam = manager.currentExam;

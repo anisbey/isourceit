@@ -28,27 +28,33 @@ DEFAULT_WORKER_POOL_SIZE = 4
 OLLAMA_SYSTEM_INIT_PROMPT = "You are a helpful assistant."
 OLLAMA_TEMPERATURE = 0.6
 
-def generate_request_messages_from_previous_chat_interactions(chat_interactions: List):
+def generate_request_messages_from_previous_chat_interactions(chat_interactions: List,image):
     
-    for interaction in chat_interactions:
-        if interaction['achieved']:
-            yield {'role': 'user',
-                   'content': interaction['hidden_prompt'] if interaction.get('hidden_prompt') else interaction['prompt']}
-            yield {'role': 'assistant', 'content': interaction.get('answer', '')}
-        elif 'image' in interaction :
-            if interaction['image']:
+    for index, interaction in enumerate(chat_interactions):
+        if index == len(chat_interactions) - 1:
+            if interaction['achieved']:
+                yield {'role': 'user',
+                    'content': interaction['hidden_prompt'] if interaction.get('hidden_prompt') else interaction['prompt']}
+                yield {'role': 'assistant', 'content': interaction.get('answer', '')}
+            elif image is not None :
                 yield {'role': 'user',
                         'content': interaction['hidden_prompt'] if interaction.get('hidden_prompt') else interaction[
                             'prompt'],
-                        'images': [interaction['image']]}
+                        'images': [image]}
             else:
                 yield {'role': 'user',
-                   'content': interaction['hidden_prompt'] if interaction.get('hidden_prompt') else interaction[
-                       'prompt']}
+                    'content': interaction['hidden_prompt'] if interaction.get('hidden_prompt') else interaction[
+                        'prompt']}
         else:
-            yield {'role': 'user',
-                   'content': interaction['hidden_prompt'] if interaction.get('hidden_prompt') else interaction[
-                       'prompt']}
+            if interaction['achieved']:
+                yield {'role': 'user',
+                    'content': interaction['hidden_prompt'] if interaction.get('hidden_prompt') else interaction[
+                        'prompt']}
+                yield {'role': 'assistant', 'content': interaction.get('answer', '')}
+            else:
+                yield {'role': 'user',
+                    'content': interaction['hidden_prompt'] if interaction.get('hidden_prompt') else interaction[
+                        'prompt']}
 
 
 class OllamaHandler2(ChatAIHandler):
@@ -148,8 +154,6 @@ class OllamaHandler2(ChatAIHandler):
 
     def _handle_prompt(self, action: AskChatAI, private_key: str, request_identifiers: Dict = None,
                        extra: dict = None):
-        LOG.warning("_handle_prompt")
-        LOG.info(action)
        
         # retrieve previous exchanges (requires examId, username, questionIdx, chat_key)
         mongo_dao = MongoDAO()
@@ -163,10 +167,17 @@ class OllamaHandler2(ChatAIHandler):
         init_prompt = extra['custom_init_prompt'] if 'custom_init_prompt' in extra else OLLAMA_SYSTEM_INIT_PROMPT
 
         temperature = extra['custom_temperature'] if 'custom_temperature' in extra is not None else OLLAMA_TEMPERATURE
-        rq_messages = [{"role": "system", "content": init_prompt}] + list(
-                generate_request_messages_from_previous_chat_interactions(old_chat_interactions))
+        if "image" in action:
+            if action["model_key"] in VISION_MODELS:
+                rq_messages = [{"role": "system", "content": init_prompt}] + list(
+                        generate_request_messages_from_previous_chat_interactions(old_chat_interactions,action["image"]))
+            else:
+                rq_messages = [{"role": "system", "content": init_prompt}] + list(
+                    generate_request_messages_from_previous_chat_interactions(old_chat_interactions,None)) 
+        else:
+            rq_messages = [{"role": "system", "content": init_prompt}] + list(
+                    generate_request_messages_from_previous_chat_interactions(old_chat_interactions,None))
 
-        
         rq_body = {
             'model': action['model_key'],
             'messages': rq_messages,
@@ -181,7 +192,12 @@ class OllamaHandler2(ChatAIHandler):
         url1 = self._url+"/api/chat"
 
         try:
-            http_response = requests.post(url1, data=json.dumps(rq_body), headers=rq_headers, stream=True)
+            #http_response = requests.post(url1, data=json.dumps(rq_body), headers=rq_headers, stream=True)
+            http_response = requests.post(
+                                url1,
+                                json={"model": action['model_key'], "messages": rq_messages, "stream": True},
+                            stream=True
+                            )
             http_response.raise_for_status()
         except requests.exceptions.Timeout as e:
             LOG.warning('timeout exception: {}'.format(repr(e)))
