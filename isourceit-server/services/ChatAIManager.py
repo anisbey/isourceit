@@ -28,6 +28,7 @@ from utils.loggingUtils import configure_logging
 LOG = logging.getLogger(__name__)
 
 
+
 def handle_chat_answer(config: Dict, queue: JoinableQueue):
     # Since this function will be a new process, we need to re-configure logging, and ask for new connection
     # (socketio, mongo)
@@ -101,7 +102,6 @@ class ChatAIManager(metaclass=Singleton):
                 self._ai_handlers_by_chat_key[h.chat_key] = h
             if 'CHATAI_OLLAMA_URL' in self._config:
                 h = OllamaHandler2(self._answer_queue, self._config)
-                h.check_ollama()
                 LOG.info(h)
                 self._ai_handlers_by_chat_key[h.chat_key] = h
             if self._config.get('CHATAI_OPENAI_ENABLED', False) is True:
@@ -111,6 +111,14 @@ class ChatAIManager(metaclass=Singleton):
         # Add copyPast
         h = CopyPasteHandler(self._answer_queue)
         self._ai_handlers_by_chat_key[h.chat_key] = h
+    
+    def _configure_ollama_ip(self,ip):
+        if ip is not None:
+            if 'CHATAI_OLLAMA_URL' in self._config:
+                h = OllamaHandler2(self._answer_queue, self._config)
+                h.update_ollama_url(ip)
+                LOG.info(h)
+                self._ai_handlers_by_chat_key[h.chat_key] = h
 
     def start(self):
         self._answer_process = Process(target=handle_chat_answer, args=(self._config, self._answer_queue))

@@ -12,6 +12,7 @@ from mongoDAO.MongoDAO import MongoDAO
 from mongoDAO.studentActionRepository import find_last_chat_ai_model_interactions
 from mongoModel.StudentAction import AskChatAI
 from services.chatAI.ChatAIHandler import ChatAIHandler
+import socket
 
 __all__ = ['OllamaHAndler2']
 
@@ -27,34 +28,33 @@ VISION_MODELS = ["llama3.2-vision","llama3.2-vision:90b"]
 DEFAULT_WORKER_POOL_SIZE = 4
 OLLAMA_SYSTEM_INIT_PROMPT = "You are a helpful assistant."
 OLLAMA_TEMPERATURE = 0.6
+OLLAMA_IP = "http://host.docker.internal:11434"
+def get_active_interface_ip():
+    try:
+        # Connect to an external IP (it doesn't matter which)
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("8.8.8.8", 80))
+        local_ip = s.getsockname()[0]
+        OLLAMA_IP = local_ip
+        s.close()
+        return local_ip
+    except Exception as e:
+        print(f"Error obtaining active interface IP: {e}")
+        return None
 
-def generate_request_messages_from_previous_chat_interactions(chat_interactions: List,image):
-    
-    for index, interaction in enumerate(chat_interactions):
-        if index == len(chat_interactions) - 1:
-            if interaction['achieved']:
-                yield {'role': 'user',
-                    'content': interaction['hidden_prompt'] if interaction.get('hidden_prompt') else interaction['prompt']}
-                yield {'role': 'assistant', 'content': interaction.get('answer', '')}
-            elif image is not None :
-                yield {'role': 'user',
-                        'content': interaction['hidden_prompt'] if interaction.get('hidden_prompt') else interaction[
-                            'prompt'],
-                        'images': [image]}
-            else:
-                yield {'role': 'user',
-                    'content': interaction['hidden_prompt'] if interaction.get('hidden_prompt') else interaction[
-                        'prompt']}
+def generate_request_messages_from_previous_chat_interactions(chat_interactions: List):
+    for interaction in chat_interactions:
+        if interaction['achieved']:
+            yield {'role': 'user',
+                   'content': interaction['hidden_prompt'] if interaction.get('hidden_prompt') else interaction[
+                       'prompt']}
+            yield {'role': 'assistant', 'content': interaction.get('answer', '')}
         else:
-            if interaction['achieved']:
-                yield {'role': 'user',
-                    'content': interaction['hidden_prompt'] if interaction.get('hidden_prompt') else interaction[
-                        'prompt']}
-                yield {'role': 'assistant', 'content': interaction.get('answer', '')}
-            else:
-                yield {'role': 'user',
-                    'content': interaction['hidden_prompt'] if interaction.get('hidden_prompt') else interaction[
-                        'prompt']}
+            yield {'role': 'user',
+                   'content': interaction['hidden_prompt'] if interaction.get('hidden_prompt') else interaction[
+                       'prompt']}
+
+
 
 
 class OllamaHandler2(ChatAIHandler):
@@ -65,7 +65,7 @@ class OllamaHandler2(ChatAIHandler):
         self._worker_pool_size: int = -1
         self._response_queue: Queue = response_queue
         self._init_config(config)
-        self._url : str
+        self._url : str = OLLAMA_IP
 
     def _init_config(self, config: Dict = None):
         if config is not None:
@@ -112,7 +112,7 @@ class OllamaHandler2(ChatAIHandler):
     #check the availability of ollama on localhost and otherwise use the server of ollama
     def check_ollama(self):
         # Define the API endpoint
-        url = "http://localhost:11434/api/tags"
+        url = OLLAMA_IP+"/api/tags"
         try:
             # Send the GET request
             response = requests.get(url)
@@ -129,6 +129,8 @@ class OllamaHandler2(ChatAIHandler):
             LOG.warning('check ollama in server 2')
             self._url = "http://host.docker.internal:11434"
             LOG.info(f"Error fetching models: {e}")
+    
+    
 
     def request_available_models(self, request_identifiers: Dict = None, **kwargs):
         # Define the API endpoint
@@ -167,24 +169,34 @@ class OllamaHandler2(ChatAIHandler):
         init_prompt = extra['custom_init_prompt'] if 'custom_init_prompt' in extra else OLLAMA_SYSTEM_INIT_PROMPT
 
         temperature = extra['custom_temperature'] if 'custom_temperature' in extra is not None else OLLAMA_TEMPERATURE
+        rq_messages = [{"role": "system", "content": init_prompt}] + list(
+                    generate_request_messages_from_previous_chat_interactions(old_chat_interactions))
         if "image" in action:
             if action["model_key"] in VISION_MODELS:
-                rq_messages = [{"role": "system", "content": init_prompt}] + list(
-                        generate_request_messages_from_previous_chat_interactions(old_chat_interactions,action["image"]))
+                rq_body = {
+                            'model': action['model_key'],
+                            'messages': rq_messages,
+                            'temperature': temperature,
+                            'stream': True,
+                            'user': action['student_username'],
+                            'images': action["image"]
+                        }
             else:
-                rq_messages = [{"role": "system", "content": init_prompt}] + list(
-                    generate_request_messages_from_previous_chat_interactions(old_chat_interactions,None)) 
+                rq_body = {
+                            'model': action['model_key'],
+                            'messages': rq_messages,
+                            'temperature': temperature,
+                            'stream': True,
+                            'user': action['student_username']
+                        }
         else:
-            rq_messages = [{"role": "system", "content": init_prompt}] + list(
-                    generate_request_messages_from_previous_chat_interactions(old_chat_interactions,None))
-
-        rq_body = {
-            'model': action['model_key'],
-            'messages': rq_messages,
-            'temperature': temperature,
-            'stream': True,
-            'user': action['student_username']
-        }
+            rq_body = {
+                            'model': action['model_key'],
+                            'messages': rq_messages,
+                            'temperature': temperature,
+                            'stream': True,
+                            'user': action['student_username']
+                        }
         rq_headers = {
                       "Content-Type": "application/json"}
 

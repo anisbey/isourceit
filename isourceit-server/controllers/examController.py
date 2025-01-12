@@ -3,6 +3,7 @@ from services import examService, securityService
 from sessions.securedEndpoint import secured_endpoint
 from sessions.sessionManagement import TEACHER_ROLE, ADMIN_ROLE, STUDENT_ROLE
 import logging
+from services.chatAI.OllamaHandler2 import OllamaHandler2
 
 __all__ = ['exam_controller']
 
@@ -38,6 +39,7 @@ def create_exam():
 @secured_endpoint(TEACHER_ROLE, ADMIN_ROLE)
 def saveOllamaIP():
     data = request.get_json(force=False)
+    OllamaHandler2.update_ollama_url(data["OllamaIP"])
     LOG.info("  upodate IP ollama")
     LOG.info(data)
     return "done"
