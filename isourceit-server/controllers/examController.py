@@ -20,6 +20,8 @@ def get_exams_summary():
 def get_exam(exam_id: str):
     raw_w_action_summary = request.args.get('with_action_summary', 'False')
     with_action_summary = raw_w_action_summary.lower() in ['1', 'yes', 'y', 'true']
+    LOG.info("  with_action_summary ---")
+    LOG.info(raw_w_action_summary)
     return examService.find_admin_exam_by_id(exam_id, with_action_summary=with_action_summary)
 
 
