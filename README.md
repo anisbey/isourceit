@@ -16,6 +16,8 @@ This file explains two ways to deploy the plateform and give an example of an in
 
 If you start from scratch and you just want to test the plateform on your machine, follow the steps 1 to 9 of the section [Dalai docker hosting](#dalai-docker-hosting) then follow the section [Docker full hosting](#full_docker_deployment).
 
+# Automated installation on MacOS
+If you prefer an automated installation on MacOS, you can run the script InstallExamMacOS.sh in you terminal and follow the provided instructions. You can use the same script to add Ollama models
 
 # Full docker deployment
 
@@ -165,8 +167,9 @@ With :
 - __username__ the username
 
 # Contirbutors
-- Rémi Venant, LeMans University
 - Ahmad Samer Wazan, Zayed University
+- Anis Bey
+- Rémi Venant, LeMans University
 - Imran Taj, Zayed University
 
 
