@@ -3,6 +3,7 @@ from services import examService, securityService
 from sessions.securedEndpoint import secured_endpoint
 from sessions.sessionManagement import TEACHER_ROLE, ADMIN_ROLE, STUDENT_ROLE
 import logging
+from services.chatAI.OllamaHandler2 import OllamaHandler2
 
 __all__ = ['exam_controller']
 
@@ -20,6 +21,8 @@ def get_exams_summary():
 def get_exam(exam_id: str):
     raw_w_action_summary = request.args.get('with_action_summary', 'False')
     with_action_summary = raw_w_action_summary.lower() in ['1', 'yes', 'y', 'true']
+    LOG.info("  with_action_summary ---")
+    LOG.info(raw_w_action_summary)
     return examService.find_admin_exam_by_id(exam_id, with_action_summary=with_action_summary)
 
 
@@ -36,6 +39,7 @@ def create_exam():
 @secured_endpoint(TEACHER_ROLE, ADMIN_ROLE)
 def saveOllamaIP():
     data = request.get_json(force=False)
+    OllamaHandler2.update_ollama_url(data["OllamaIP"])
     LOG.info("  upodate IP ollama")
     LOG.info(data)
     return "done"
