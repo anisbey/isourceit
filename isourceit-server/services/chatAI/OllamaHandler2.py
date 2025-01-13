@@ -36,11 +36,14 @@ def get_active_interface_ip():
         s.connect(("8.8.8.8", 80))
         local_ip = s.getsockname()[0]
         OLLAMA_IP = local_ip
+        LOG.info("OLLAMA_IP")
+        LOG.info(OLLAMA_IP)
         s.close()
         return local_ip
     except Exception as e:
         print(f"Error obtaining active interface IP: {e}")
         return None
+
 
 def generate_request_messages_from_previous_chat_interactions(chat_interactions: List):
     for interaction in chat_interactions:
@@ -66,6 +69,12 @@ class OllamaHandler2(ChatAIHandler):
         self._response_queue: Queue = response_queue
         self._init_config(config)
         self._url : str = OLLAMA_IP
+    
+    def _get_ip_address(self) -> str:
+        # Function to get the IP address
+        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
+            s.connect(("8.8.8.8", 80))  # Google's public DNS server
+            return s.getsockname()[0]
 
     def _init_config(self, config: Dict = None):
         if config is not None:
@@ -108,34 +117,14 @@ class OllamaHandler2(ChatAIHandler):
             return
         self._worker_pool.shutdown(wait=True, cancel_futures=True)
         self._worker_pool = None
-
-    #check the availability of ollama on localhost and otherwise use the server of ollama
-    def check_ollama(self):
-        # Define the API endpoint
-        url = OLLAMA_IP+"/api/tags"
-        try:
-            # Send the GET request
-            response = requests.get(url)
-            response.raise_for_status()  # Raise an error for HTTP codes 4xx/5xx
-            # Parse the JSON response
-            models = response.json()
-            if len(models["models"])>0:
-                LOG.warning('check ollama in localhost')
-                self._url = "http://localhost:11434"
-            else:
-                LOG.warning('There is no models in Ollama localhost - switch to Ollama server')
-                self._url = "http://host.docker.internal:11434"
-        except requests.exceptions.RequestException as e:
-            LOG.warning('check ollama in server 2')
-            self._url = "http://host.docker.internal:11434"
-            LOG.info(f"Error fetching models: {e}")
     
     
 
     def request_available_models(self, request_identifiers: Dict = None, **kwargs):
         # Define the API endpoint
         url = self._url+"/api/tags"
-
+        LOG.info("self._url")
+        LOG.info(self._url)
         if not self.connected:
             LOG.warning('Cannot request available model. Not Connected.')
             return
@@ -202,7 +191,8 @@ class OllamaHandler2(ChatAIHandler):
 
         # send request as stream and retrieve event sequentially
         url1 = self._url+"/api/chat"
-
+        LOG.info("_handle_prompt")
+        LOG.info(url1)
         try:
             #http_response = requests.post(url1, data=json.dumps(rq_body), headers=rq_headers, stream=True)
             http_response = requests.post(
