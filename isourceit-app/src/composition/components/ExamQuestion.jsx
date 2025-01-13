@@ -29,8 +29,7 @@ function ExamQuestion({ question, chatChoices }) {
     question.deleteExternalResource(rscId)
       .finally(() => setChatRscSubmitting(false));
   };
-console.log("hhjjj");
-console.log(question);
+
   return (
     <Row className="justify-content-center">
       <Col xs={12} sm={12} md={12} lg={10} xl={10}>

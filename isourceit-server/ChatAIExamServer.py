@@ -58,13 +58,21 @@ def create_server_apps(config_file_path: str, static_folder_path: str,
 
     # CORS setup for Flask and socket.io
     socket_io_allowed_origin = None
+    # if app.config.get('ENABLE_CORS', False):
+    #     app.logger.warning("ENABLE CORS")
+    #     cors = CORS(app, resources={r"/api/*": {
+    #         "origins": ["http://localhost:3000", "http://127.0.0.1:3000", "moz-extension://*"],
+    #         "supports_credentials": True
+    #     }})
+    #     socket_io_allowed_origin = ("http://localhost:8888", "http://127.0.0.1:8888")
+    #to allow access using IP of the host machine
     if app.config.get('ENABLE_CORS', False):
         app.logger.warning("ENABLE CORS")
         cors = CORS(app, resources={r"/api/*": {
-            "origins": ["http://localhost:3000", "http://127.0.0.1:3000", "moz-extension://*"],
-            "supports_credentials": True
-        }})
-        socket_io_allowed_origin = ("http://localhost:8888", "http://127.0.0.1:8888")
+                        "origins": "*",  # Allow all origins
+                        "supports_credentials": True
+                    }})
+        socket_io_allowed_origin = "*"
 
     # Flask-SocketIO initialisation
     socketio = SocketIO(app, message_queue=app.config.get('REDIS_URL', 'redis://'),
