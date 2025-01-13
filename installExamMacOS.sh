@@ -57,6 +57,11 @@ else
   echo "Ollama installed successfully."
 fi
 
+# Set OLLAMA_HOST environment variable
+echo "Setting OLLAMA_HOST environment variable..."
+launchctl setenv OLLAMA_HOST "0.0.0.0" || error_exit "Failed to set OLLAMA_HOST environment variable."
+echo "OLLAMA_HOST set to 0.0.0.0 successfully."
+
 # Validate models
 MODELS=($@)
 if [ ${#MODELS[@]} -eq 0 ]; then
