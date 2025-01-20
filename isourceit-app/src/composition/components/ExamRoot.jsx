@@ -57,6 +57,7 @@ function ExamRoot() {
   } else if (examMgr.exam.onSubmit) {
     view = <ExamSubmit exam={examMgr.exam} />;
   } else {
+    console.log(examMgr.exam);
     view = <ExamComposition exam={examMgr.exam} />;
   }
 
@@ -67,7 +68,7 @@ function ExamRoot() {
         <Row className="mt-3 justify-content-center">
           <Col md={6} lg={4}>
             <Alert variant="danger">
-              <Alert.Heading>Chat AI service unavailable</Alert.Heading>
+              <Alert.Heading>Chat AI service unavailables</Alert.Heading>
               <p>
                 It appears you are currently not able to communication
                 with the chat AI service.

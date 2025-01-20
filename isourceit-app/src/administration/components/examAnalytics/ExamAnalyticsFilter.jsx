@@ -45,10 +45,10 @@ function ExamAnalyticsFilter({
         >
           <option value="">Please select a student</option>
           {
-           students.map((student) => (
-             <option key={student.username} value={student.username}>{student.username}</option>
-           ))
-           }
+            students.map((student) => (
+              <option key={student.username} value={student.username}>{student.username}</option>
+            ))
+          }
         </Form.Select>
       </Col>
       <Col>
@@ -60,15 +60,11 @@ function ExamAnalyticsFilter({
         >
           <option value="-1">All questions</option>
           {
-            examType === 'exam'
-              ? questions.map((question, idx) => (
-                <option key={question} value={idx}>{limitQuestionSize(question)}</option>
-              ))
-              : questions.map((question, idx) => (
-                <option key={question.question} value={idx}>
-                  {limitQuestionSize(question.question)}
-                </option>
-              ))
+            questions.map((question, idx) => (
+              <option key={question.text} value={idx}>
+                {limitQuestionSize(question.text)}
+              </option>
+            ))
           }
         </Form.Select>
       </Col>

@@ -22,6 +22,11 @@ ASK_CHAT_AI_TYPE = 'AskChatAI'
 EXTERNAL_RESOURCE_TYPE = 'AddExternalResource'
 WROTE_FINAL_ANSWER_TYPE = 'WriteFinalAnswer'
 SUBMIT_EXAM_TYPE = 'SubmitExam'
+# Define the new action type constant
+
+
+
+
 
 
 class StudentAction(TypedDict):
@@ -60,6 +65,7 @@ class AskChatAI(StudentAction):
     chat_id: pydantic.StrictStr
     chat_key: pydantic.StrictStr
     model_key: pydantic.StrictStr
+    image: NotRequired[pydantic.StrictStr]
 
 
 class ExternalResource(StudentAction):
@@ -77,6 +83,10 @@ class SubmitExam(StudentAction):
     pass
 
 
+
+
+
+
 STUDENT_ACTION_TYPE_MAPPING = {
     START_EXAM_TYPE: StartExam,
     CHANGED_QUESTION_TYPE: ChangedQuestion,
@@ -87,6 +97,8 @@ STUDENT_ACTION_TYPE_MAPPING = {
     WROTE_FINAL_ANSWER_TYPE: WroteFinalAnswer,
     SUBMIT_EXAM_TYPE: SubmitExam
 }
+
+
 
 
 def create_start_exam(exam_id: str, student_username: str, timestamp: datetime = None):

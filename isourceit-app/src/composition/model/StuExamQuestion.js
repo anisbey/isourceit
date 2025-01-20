@@ -88,8 +88,9 @@ class StuExamQuestion {
     this._resources = jsonData.resources ?? this._resources;
   }
 
-  async askChatAI({ prompt, answer, chat }) {
-    await this.resync();
+  async askChatAI({ prompt, answer, chat,image }) {
+
+    await this.resync();    
     this._chatActionPromise = askChatAIQuestion({
       questionId: this._id,
       prompt,
@@ -97,8 +98,11 @@ class StuExamQuestion {
       chatId: chat.id,
       chatKey: chat.chat_key,
       modelKey: chat.model_key,
+      image,
+     
     });
     const action = await this._chatActionPromise;
+
     this._chatActionPromise = null;
     runInAction(() => {
       let actionTab = this._chatActions[chat.id];

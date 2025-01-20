@@ -21,6 +21,11 @@ import PasteFromOffice from '@ckeditor/ckeditor5-paste-from-office/src/pastefrom
 import Table from '@ckeditor/ckeditor5-table/src/table.js';
 import TableToolbar from '@ckeditor/ckeditor5-table/src/tabletoolbar.js';
 import TextTransformation from '@ckeditor/ckeditor5-typing/src/texttransformation.js';
+import Image from '@ckeditor/ckeditor5-image/src/image';
+import ImageUpload from '@ckeditor/ckeditor5-image/src/imageupload';
+import FileRepository from '@ckeditor/ckeditor5-upload/src/filerepository';
+import SimpleUploadAdapter from '@ckeditor/ckeditor5-upload/src/adapters/simpleuploadadapter';
+import ImageUpload from '@ckeditor/ckeditor5-upload'
 
 class Editor extends ClassicEditor {}
 
@@ -43,7 +48,17 @@ Editor.builtinPlugins = [
 	PasteFromOffice,
 	Table,
 	TableToolbar,
-	TextTransformation
+	TextTransformation,
+	ImageBlock,
+	ImageCaption,
+	ImageInline,
+	ImageInsert,
+	ImageInsertViaUrl,
+	ImageResize,
+	ImageStyle,
+	ImageTextAlternative,
+	ImageToolbar,
+	ImageUpload,
 ];
 
 // Editor configuration.
@@ -69,10 +84,14 @@ Editor.defaultConfig = {
 			'blockQuote',
 			'insertTable',
 			'undo',
-			'redo'
+			'redo',
+			'insertImage',
 		]
 	},
 	language: 'en',
+	simpleUpload: {
+        uploadUrl: 'http://localhost:5000/upload', // Replace with your backend upload endpoint
+    },
 	table: {
 		contentToolbar: [
 			'tableColumn',

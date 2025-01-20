@@ -45,10 +45,13 @@ def encrypt_socrat_chat_api_keys(socrat: SocratQuestionnaire) -> SocratQuestionn
         key = DFLT_FERNET_KEY
     if 'selected_chat' not in socrat:
         return socrat
+    LOG.info("herrre")
+    LOG.info(socrat)
     if 'api_key' in socrat['selected_chat']:
-        f_cypher = Fernet(key.encode('UTF-8'))
-        socrat['selected_chat']['api_key'] = f_cypher.encrypt(socrat['selected_chat']['api_key']
-                                                              .encode('UTF-8')).decode('UTF-8')
+        if socrat['selected_chat']['api_key'] is not None :
+            f_cypher = Fernet(key.encode('UTF-8'))
+            socrat['selected_chat']['api_key'] = f_cypher.encrypt(socrat['selected_chat']['api_key']
+                                                                .encode('UTF-8')).decode('UTF-8')
     return socrat
 
 
@@ -74,9 +77,10 @@ def decrypt_socrat_chat_api_keys(socrat: SocratQuestionnaire) -> SocratQuestionn
     if 'selected_chat' not in socrat:
         return socrat
     if 'api_key' in socrat['selected_chat']:
-        f_cypher = Fernet(key.encode('UTF-8'))
-        socrat['selected_chat']['api_key'] = f_cypher.decrypt(socrat['selected_chat']['api_key']
-                                                              .encode('UTF-8')).decode('UTF-8')
+        if socrat['selected_chat']['api_key'] is not None :
+            f_cypher = Fernet(key.encode('UTF-8'))
+            socrat['selected_chat']['api_key'] = f_cypher.decrypt(socrat['selected_chat']['api_key']
+                                                                .encode('UTF-8')).decode('UTF-8')
     return socrat
 
 

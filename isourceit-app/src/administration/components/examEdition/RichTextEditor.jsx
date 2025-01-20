@@ -25,6 +25,7 @@ function RichTextEditor({
         editor={MyEditor}
         config={{
           placeholder,
+          
         }}
         data={value}
         onChange={(event, editor) => {
@@ -35,6 +36,10 @@ function RichTextEditor({
     </div>
   );
 }
+
+
+
+
 
 RichTextEditor.propTypes = {
   value: PropTypes.string.isRequired,

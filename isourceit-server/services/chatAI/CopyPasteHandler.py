@@ -8,6 +8,7 @@ __all__ = ['CopyPasteHandler']
 
 LOG = logging.getLogger(__name__)
 
+
 COPYPASTE_MODEL = 'DFLT'
 
 

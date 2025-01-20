@@ -3,11 +3,11 @@ from flask import redirect, url_for, Blueprint
 from services import examReportService
 from sessions.securedEndpoint import secured_endpoint
 from sessions.sessionManagement import TEACHER_ROLE, ADMIN_ROLE
-
+import logging
 __all__ = ['report_controller']
 
 report_controller = Blueprint('report', __name__)
-
+LOG = logging.getLogger(__name__)
 
 @report_controller.route("/api/rest/admin/exams/<exam_id>/reports", methods=['GET'])
 @secured_endpoint(TEACHER_ROLE, ADMIN_ROLE)

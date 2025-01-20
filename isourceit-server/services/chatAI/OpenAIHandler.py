@@ -18,8 +18,10 @@ __all__ = ['OpenAIHAndler']
 LOG = logging.getLogger(__name__)
 
 NAME_MODEL_DICT = {
-    'gpt-3.5-turbo': 'Most capable GPT-3.5 model.'
+    'gpt-4o': 'Most capable GPT model.'
 }
+
+VISION_MODELS = ["gpt-4o"]
 
 OPENAI_CHAT_URL = "https://api.openai.com/v1/chat/completions"
 DEFAULT_WORKER_POOL_SIZE = 4
@@ -27,17 +29,44 @@ OPENAI_SYSTEM_INIT_PROMPT = "You are a helpful assistant."
 OPENAI_TEMPERATURE = 0.6
 
 
-def generate_request_messages_from_previous_chat_interactions(chat_interactions: List):
-    for interaction in chat_interactions:
-        if interaction['achieved']:
-            yield {'role': 'user',
-                   'content': interaction['hidden_prompt'] if interaction.get('hidden_prompt') else interaction[
-                       'prompt']}
-            yield {'role': 'assistant', 'content': interaction.get('answer', '')}
+def generate_request_messages_from_previous_chat_interactions(chat_interactions: List,image):
+    #for interaction in chat_interactions:
+    for index, interaction in enumerate(chat_interactions):
+        if index == len(chat_interactions) - 1:
+            if interaction['achieved']:
+                yield {'role': 'user',
+                    'content': interaction['hidden_prompt'] if interaction.get('hidden_prompt') else interaction[
+                        'prompt']}
+                yield {'role': 'assistant', 'content': interaction.get('answer', '')}
+            elif image is not None:
+                yield {'role': 'user',
+                'content': [
+
+                    {
+                    "type": "text",
+                    "text": interaction['hidden_prompt'] if interaction.get('hidden_prompt') else interaction[
+                    'prompt'],
+                },
+                {
+                    "type": "image_url",
+                    "image_url": {"url": f"{image}"},
+                }]}
+            else:
+                yield {'role': 'user',
+                    'content': interaction['hidden_prompt'] if interaction.get('hidden_prompt') else interaction[
+                        'prompt']}
         else:
-            yield {'role': 'user',
-                   'content': interaction['hidden_prompt'] if interaction.get('hidden_prompt') else interaction[
-                       'prompt']}
+            if interaction['achieved']:
+                yield {'role': 'user',
+                    'content': interaction['hidden_prompt'] if interaction.get('hidden_prompt') else interaction[
+                        'prompt']}
+                yield {'role': 'assistant', 'content': interaction.get('answer', '')}
+            else:
+                yield {'role': 'user',
+                    'content': interaction['hidden_prompt'] if interaction.get('hidden_prompt') else interaction[
+                        'prompt']}
+        
+        
 
 
 class OpenAIHAndler(ChatAIHandler):
@@ -57,7 +86,7 @@ class OpenAIHAndler(ChatAIHandler):
 
     @property
     def chat_key(self) -> str:
-        return 'OPENAI'
+        return 'OPENAI ..'
 
     @property
     def name(self) -> str:
@@ -112,10 +141,15 @@ class OpenAIHAndler(ChatAIHandler):
                                                                      question_idx=action['question_idx'],
                                                                      chat_id=action['chat_id'])
         # forge request using stream mode and user tracking
+        LOG.warning(old_chat_interactions)
         init_prompt = extra['custom_init_prompt'] if 'custom_init_prompt' in extra else OPENAI_SYSTEM_INIT_PROMPT
         temperature = extra['custom_temperature'] if 'custom_temperature' in extra is not None else OPENAI_TEMPERATURE
-        rq_messages = [{"role": "system", "content": init_prompt}] + list(
-            generate_request_messages_from_previous_chat_interactions(old_chat_interactions))
+        if "image" in action:
+            rq_messages = [{"role": "system", "content": init_prompt}] + list(
+                    generate_request_messages_from_previous_chat_interactions(old_chat_interactions,action["image"]))
+        else:
+            rq_messages = [{"role": "system", "content": init_prompt}] + list(
+                    generate_request_messages_from_previous_chat_interactions(old_chat_interactions,None))
         rq_body = {
             'model': action['model_key'],
             'messages': rq_messages,

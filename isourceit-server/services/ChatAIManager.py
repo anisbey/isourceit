@@ -16,14 +16,17 @@ from mongoModel.StudentAction import AskChatAI
 from services.chatAI.ChatAIHandler import ChatAIHandler
 from services.chatAI.CopyPasteHandler import CopyPasteHandler
 from services.chatAI.DalaiHandler import DalaiHandler
+from services.chatAI.OllamaHandler2 import OllamaHandler2
 from services.chatAI.OpenAIHandler import OpenAIHAndler
 from utils.Singleton import Singleton
+from mongoDAO import examRepository
 
 __all__ = ['ChatAIManager']
 
 from utils.loggingUtils import configure_logging
 
 LOG = logging.getLogger(__name__)
+
 
 
 def handle_chat_answer(config: Dict, queue: JoinableQueue):
@@ -49,6 +52,15 @@ def handle_chat_answer(config: Dict, queue: JoinableQueue):
                         description = ChatAIDescription(chat_key=chat_key, model_key=model_key)
                         add_chatai_description(mongo_dao, description)
                         LOG.info("New Chat AI Model discovered! %s : %s", chat_key, model_key)
+                elif request_type == 'comment':
+                    action_id = response.get('action_id')
+                    user_sid = response.get('user_sid')
+                    if action_id is None or user_sid is None:
+                        LOG.warning('Receive response without chat_key or model_key or action_id or user_sid')
+                        continue
+                    comment_on_answer = response.get('comment')
+                    update_chat_ai_answer(mongo_dao, action_id, answer, achieved=achieved)
+                    LOG.info("Comment on generated answer! : %s", comment_on_answer)
 
                 elif request_type == 'prompt':
                     action_id = response.get('action_id')
@@ -88,12 +100,25 @@ class ChatAIManager(metaclass=Singleton):
             if 'CHATAI_DALAI_URL' in self._config:
                 h = DalaiHandler(self._answer_queue, self._config)
                 self._ai_handlers_by_chat_key[h.chat_key] = h
+            if 'CHATAI_OLLAMA_URL' in self._config:
+                h = OllamaHandler2(self._answer_queue, self._config)
+                LOG.info(h)
+                self._ai_handlers_by_chat_key[h.chat_key] = h
             if self._config.get('CHATAI_OPENAI_ENABLED', False) is True:
                 h = OpenAIHAndler(self._answer_queue, self._config)
+                LOG.info(h)
                 self._ai_handlers_by_chat_key[h.chat_key] = h
         # Add copyPast
         h = CopyPasteHandler(self._answer_queue)
         self._ai_handlers_by_chat_key[h.chat_key] = h
+    
+    def _configure_ollama_ip(self,ip):
+        if ip is not None:
+            if 'CHATAI_OLLAMA_URL' in self._config:
+                h = OllamaHandler2(self._answer_queue, self._config)
+                h.update_ollama_url(ip)
+                LOG.info(h)
+                self._ai_handlers_by_chat_key[h.chat_key] = h
 
     def start(self):
         self._answer_process = Process(target=handle_chat_answer, args=(self._config, self._answer_queue))
@@ -147,7 +172,8 @@ class ChatAIManager(metaclass=Singleton):
                 'model_key': model_key,
                 'title': "{}. {}.".format(handler.name, model_title),
                 'copyPaste': handler.copy_past,
-                'privateKeyRequired': handler.private_key_required
+                'privateKeyRequired': handler.private_key_required,
+               # 'models': handler.request_available_models()
             }
 
     @property
@@ -192,5 +218,8 @@ class ChatAIManager(metaclass=Singleton):
             raise Exception("Unmanaged chat: {}".format(action['chat_key']))
         request_identifiers = dict(request_type='prompt', question_idx=action['question_idx'],
                                    action_id=action_id, user_sid=user_sid, chat_id=action['chat_id'])
+        LOG.warning("afeter request_identifiers")
+        LOG.info(custom_init_prompt)
+
         handler.send_prompt(action['model_key'], prompt, request_identifiers, private_key=private_key,
                             action=action, custom_init_prompt=custom_init_prompt, **kwargs)

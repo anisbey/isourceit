@@ -12,7 +12,7 @@ function SocratReady({ socrat }) {
     setDisabled(true);
     socrat.startSocrat().catch(() => setDisabled(false));
   };
-
+  console.log("hhherre");
   return (
     <Row className="justify-content-center">
       <Col xs={12} sm={10} md={8} lg={6}>

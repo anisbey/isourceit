@@ -48,7 +48,6 @@ def __handle_exam_action(action_data: Dict, action_class: Any, exam: Exam, mongo
     # Clean action_data and creation action instance
     action = __prepare_action(action_data, action_class)
 
-    # if action type is START_EXAM_TYPE: assert exam is not started, then update session
     if action_class == StartExam:
         if is_exam_started():
             raise BadRequest('Cannot handle Start exam action; exam already started')
@@ -60,7 +59,7 @@ def __handle_exam_action(action_data: Dict, action_class: Any, exam: Exam, mongo
         return {
             'timestamp': action['timestamp'],
             'id': action_id,
-            'exam_started': True,
+            'e xam_started': True,
             'timeout': timeout
         }
 
@@ -130,7 +129,11 @@ def __handle_exam_action(action_data: Dict, action_class: Any, exam: Exam, mongo
             'prompt': action['prompt'],
         }
         if ws_sid is not None:
-            chat_ai_mgr.process_prompt(action_id, action, ws_sid, private_key=private_key)
+            LOG.warning("ws_ssiiiiss is not None")
+            #find custom init prompt of the current question
+            exam = examRepository.find_exam_by_id(mongo_dao, action["exam_id"])
+            custom_init_prompt = exam["questions"][action["question_idx"]]["prompt_intruction"]
+            chat_ai_mgr.process_prompt(action_id, action, ws_sid, custom_init_prompt=custom_init_prompt,private_key=private_key)
         else:
             LOG.warning('No ws id, will not be able to return reponse!')
             result['achieved'] = True
@@ -285,9 +288,19 @@ def __handle_socrat_action(action_data: Dict, action_class: Any, socrat: SocratQ
             'id': action_id
         }
 
+def handle_comment_answer(action_id:str, comment:str) -> None:
+    if not is_exam_started() or is_exam_ended():
+        raise Unauthorized('Exam must be started and not ended')
+
+    # Get action
+    mongo_dao = MongoDAO()
+    studentActionRepository.update_comment_on_answer(mongo_dao, action_id, comment) 
+    return "updated"
 
 def handle_action(action_data: Dict) -> Mapping:
     # In any case check exam is not finished
+    LOG.info("hhanndl")
+    LOG.info(action_data)
     if is_exam_ended():
         raise Unauthorized('Exam must not be ended')
 

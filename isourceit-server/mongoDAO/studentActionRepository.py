@@ -10,7 +10,7 @@ from mongoModel.StudentAction import StudentAction, ASK_CHAT_AI_TYPE, EXTERNAL_R
 
 __all__ = ['create_student_action', 'add_chat_ai_answer', 'mark_external_resource_removed',
            'get_actions_for_student_for_exam', 'update_chat_ai_answer', 'set_chat_ai_achieved',
-           'find_last_chat_ai_model_interactions']
+           'find_last_chat_ai_model_interactions','update_comment_on_answer']
 
 
 def create_student_action(dao: MongoDAO, student_action: StudentAction) -> str:
@@ -36,6 +36,7 @@ def add_chat_ai_answer(dao: MongoDAO, chat_ai_id: str, answer: str, achieved: bo
         raise Exception('Chat AI Id not found or action type mismatch.')
 
 
+
 def update_chat_ai_answer(dao: MongoDAO, chat_ai_id: str, answer: str, achieved: bool = False) -> None:
     if not chat_ai_id:
         raise Exception('Chat AI id required to add chat ai answer')
@@ -57,6 +58,19 @@ def update_chat_ai_answer(dao: MongoDAO, chat_ai_id: str, answer: str, achieved:
     if result.modified_count == 0:
         raise Exception('Chat AI Id not found or action type mismatch.')
 
+def update_comment_on_answer(dao: MongoDAO, chat_ai_id: str, comment: str) -> None:
+    if not chat_ai_id:
+        raise Exception('Chat AI id required to add chat ai answer')
+    result = dao.student_action_col.update_one({
+        '_id': ObjectId(chat_ai_id),
+        'action_type': ASK_CHAT_AI_TYPE
+    }, [{
+        '$set': {
+            'comment': comment
+        }
+    }])
+    if result.modified_count == 0:
+        raise Exception('Chat AI Id not found or action type mismatch.')
 
 def set_chat_ai_achieved(dao: MongoDAO, chat_ai_id: str, achieved: bool) -> None:
     if not chat_ai_id:

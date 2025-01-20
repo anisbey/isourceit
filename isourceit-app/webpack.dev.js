@@ -8,8 +8,8 @@ const babelConfig = require('./babel.config'); // Info de config de babel
 
 const PUBLIC_PATH = '/'; // url de base de l'appli
 const RESOURCES_PATH = '/'; // url des fichiers
-const API_BASE_URL = 'http://localhost:5001/api/rest';
-const WEBSOCKET_BASE_URL = 'http://localhost:5001';
+const API_BASE_URL = 'http://localhost:5000/api/rest';
+const WEBSOCKET_BASE_URL = 'http://localhost:5000';
 const WEBSOCKET_PATH_URL = null; // default (/socket.io/)
 
 module.exports = {

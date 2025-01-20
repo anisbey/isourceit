@@ -10,9 +10,11 @@ import MultiResourcePanel from './question/MultiResourcePanel';
 function ExamQuestion({ question, chatChoices }) {
   const [chatRscSubmitting, setChatRscSubmitting] = useState(false);
 
-  const submitChatAI = ({ prompt, answer, chat }) => {
+
+  const submitChatAI = ({ prompt, answer, chat, image = null }) => {
     setChatRscSubmitting(true);
-    question.askChatAI({ prompt, answer, chat })
+
+    question.askChatAI({ prompt, answer, chat, image })
       .finally(() => setChatRscSubmitting(false));
   };
 
@@ -34,7 +36,7 @@ function ExamQuestion({ question, chatChoices }) {
 
         <Alert variant="primary" className="mb-3">
           {/* eslint-disable-next-line react/no-danger */}
-          <div dangerouslySetInnerHTML={{ __html: question.label }} />
+          <div dangerouslySetInnerHTML={{ __html: question.label.text }} />
         </Alert>
         <Form>
           <fieldset>
@@ -43,7 +45,7 @@ function ExamQuestion({ question, chatChoices }) {
                 <AnswerInput
                   answer={question.initAnswer}
                   onAnswerChange={(txt) => { question.initAnswer = txt; }}
-                  label="Initial answer"
+                  label="Initial answerrr"
                   controlId="ExamQuestion-initialAnswer"
                 />
               </Col>

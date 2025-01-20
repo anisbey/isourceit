@@ -152,6 +152,7 @@ _WroteInitialAnswerAction.propTypes = {
 export const WroteInitialAnswerAction = observer(_WroteInitialAnswerAction);
 
 function _AskChatAIAction({ action, ...props }) {
+
   return (
     <BaseAction title={`(Q${action.question_idx + 1}) Ask Chat AI`} timestamp={action.timestamp} variant="success" {...props}>
       <p className="mb-0" style={{ whiteSpace: 'pre-line' }}>
@@ -163,6 +164,11 @@ function _AskChatAIAction({ action, ...props }) {
         <u>Answer:</u>
         {' '}
         {action.answer}
+      </p>
+      <p className="mb-2" style={{ whiteSpace: 'pre-line' }}>
+        <u>Comment:</u>
+        {' '}
+        {action.comment}
       </p>
     </BaseAction>
   );

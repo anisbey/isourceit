@@ -26,6 +26,26 @@ export function changeQuestion({ questionId, nextQuestionId }) {
     .then((res) => res.data);
 }
 
+export function commentOnAnswer({
+  questionId, comment
+}) {
+  return ROOT_AX.post(`${ROOT_URL}/composition/sendMessage`, {
+    questionId: questionId,
+    comment: comment
+  })
+    .then((res) => res.data);
+}
+
+export function saveOllamaIP({
+  OllamaIP
+}) {
+  return ROOT_AX.post(`${ROOT_URL}/admin/saveOllamaIP`, {
+    OllamaIP: OllamaIP
+  })
+    .then((res) => res.data);
+}
+
+
 export function lostFocus({
   questionId, timestamp, returnTimestamp, durationSeconds, pageHidden,
 }) {
@@ -51,7 +71,7 @@ export function writeInitialAnswerQuestion({ questionId, text, timestamp = null 
 }
 
 export function askChatAIQuestion({
-  questionId, prompt, answer, chatId, chatKey, modelKey, timestamp = null,
+  questionId, prompt, answer, chatId, chatKey, modelKey, image , timestamp = null,
 }) {
   return ROOT_AX.post(`${ROOT_URL}/composition/actions`, {
     action_type: 'AskChatAI',
@@ -61,10 +81,12 @@ export function askChatAIQuestion({
     chat_id: chatId,
     chat_key: chatKey,
     model_key: modelKey,
+    image, // Add the image attribute
     timestamp: timestamp ? timestamp.toISOString() : null,
   })
     .then((res) => res.data);
 }
+
 
 export function addExternalResourceQuestion({
   questionId, title, description, rscType, timestamp = null,
