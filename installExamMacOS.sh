@@ -129,7 +129,7 @@ fi
 
 # Check for existing containers, images, and volumes
 ISOURCEIT_IMAGE=$(docker images -q isourceit-server)
-ISOURCEIT_VOLUME=$(docker volume ls -q --filter "name=isourceit-data")
+ISOURCEIT_VOLUME=$(docker volume ls -q --filter "name=isourceit_isourceit-data")
 
 # Find all containers by image names
 HTTPD_CONTAINERS=$(docker ps -aq --filter "ancestor=httpd:2.4")
